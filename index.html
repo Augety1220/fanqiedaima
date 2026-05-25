@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>番茄小说真实ID提取器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 420px;
+            background: white;
+            border-radius: 24px;
+            padding: 30px 22px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.25);
+            margin-top: 15px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            color: #888;
+        }
+        
+        .input-group {
+            margin-bottom: 18px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .input-group textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 14px 16px;
+            border: 2px solid #e8e8e8;
+            border-radius: 14px;
+            font-size: 15px;
+            resize: vertical;
+            transition: all 0.3s;
+            font-family: inherit;
+            line-height: 1.5;
+        }
+        
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            box-shadow: 0 0 0 4px rgba(255,107,107,0.1);
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn:not(:disabled):active {
+            transform: scale(0.98);
+        }
+        
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+        
+        .btn.loading .spinner {
+            display: inline-block;
+        }
+        
+        .btn.loading .btn-text {
+            display: none;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .result {
+            margin-top: 25px;
+            padding: 22px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #fff5f5 100%);
+            border-radius: 16px;
+            display: none;
+            border: 2px solid #ffe0e0;
+        }
+        
+        .result.show {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-title {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .result-id-box {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            border: 2px solid #ff6b6b;
+            margin-bottom: 12px;
+        }
+        
+        .result-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 6px;
+        }
+        
+        .result-id {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            word-break: break-all;
+            font-family: 'SF Mono', Monaco, monospace;
+            letter-spacing: 0.5px;
+        }
+        
+        .copy-btn {
+            width: 100%;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .copy-btn:active {
+            background: #ee5a24;
+        }
+        
+        .copy-btn.copied {
+            background: #4caf50;
+        }
+        
+        .error {
+            margin-top: 15px;
+            padding: 14px 16px;
+            background: #ffebee;
+            color: #c62828;
+            border-radius: 12px;
+            font-size: 14px;
+            display: none;
+            border-left: 4px solid #c62828;
+        }
+        
+        .error.show {
+            display: block;
+            animation: shake 0.5s ease;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .tips {
+            margin-top: 22px;
+            padding: 18px;
+            background: #fff8e1;
+            border-radius: 14px;
+            font-size: 13px;
+            color: #f57c00;
+            line-height: 1.7;
+        }
+        
+        .tips strong {
+            display: block;
+            margin-bottom: 8px;
+            color: #e65100;
+        }
+        
+        .tips ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+        
+        .tips li {
+            margin-bottom: 4px;
+        }
+        
+        .footer {
+            margin-top: 25px;
+            text-align: center;
+            color: rgba(255,255,255,0.8);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍅 番茄小说真实ID提取器</h1>
+            <p>粘贴链接，自动获取真实书籍ID</p>
+        </div>
+        
+        <div class="input-group">
+            <label for="linkInput">粘贴番茄小说分享链接</label>
+            <textarea id="linkInput" placeholder="例如：https://changdunovel.com/t/NL1SzCKYnH0/"></textarea>
+        </div>
+        
+        <button class="btn" id="extractBtn" onclick="extractId()">
+            <span class="spinner"></span>
+            <span class="btn-text">🔍 获取真实书籍ID</span>
+        </button>
+        
+        <div class="error" id="errorMsg"></div>
+        
+        <div class="result" id="resultBox">
+            <div class="result-title">✅ 提取成功</div>
+            
+            <div class="result-id-box">
+                <div class="result-label">真实书籍ID（数字ID）</div>
+                <div class="result-id" id="realBookId">-</div>
+            </div>
+            
+            <button class="copy-btn" id="copyBtn" onclick="copyId()">
+                <span>📋</span> 复制真实ID
+            </button>
+        </div>
+        
+        <div class="tips">
+            <strong>💡 使用说明：</strong>
+            <ul>
+                <li>粘贴番茄小说分享链接</li>
+                <li>点击按钮，自动获取真实ID</li>
+                <li>点击复制按钮即可使用</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="footer">
+        番茄小说真实ID提取工具
+    </div>
+    
+    <script>
+        // API基础URL - 部署后需要修改为实际域名
+        const API_BASE = window.location.origin;
+        
+        async function extractId() {
+            const input = document.getElementById('linkInput').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+            const resultBox = document.getElementById('resultBox');
+            const btn = document.getElementById('extractBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            
+            // 重置状态
+            errorMsg.classList.remove('show');
+            resultBox.classList.remove('show');
+            copyBtn.classList.remove('copied');
+            copyBtn.innerHTML = '<span>📋</span> 复制真实ID';
+            
+            if (!input) {
+                errorMsg.textContent = '请输入番茄小说链接';
+                errorMsg.classList.add('show');
+                return;
+            }
+            
+            if (!input.includes('changdunovel.com') && !input.includes('fanqienovel.com')) {
+                errorMsg.textContent = '请输入有效的番茄小说链接';
+                errorMsg.classList.add('show');
+                return;
+            }
+            
+            // 显示加载状态
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            try {
+                // 调用API获取真实ID
+                const response = await fetch(`${API_BASE}/api/extract?url=${encodeURIComponent(input)}`, {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(15000)
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || '获取失败');
+                }
+                
+                if (!data.realBookId) {
+                    throw new Error('无法获取真实书籍ID，请检查链接是否有效');
+                }
+                
+                document.getElementById('realBookId').textContent = data.realBookId;
+                resultBox.classList.add('show');
+                
+                // 滚动到结果区域
+                resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    errorMsg.textContent = '请求超时，请检查网络连接';
+                } else {
+                    errorMsg.textContent = error.message;
+                }
+                errorMsg.classList.add('show');
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+        
+        function copyId() {
+            const bookId = document.getElementById('realBookId').textContent;
+            const copyBtn = document.getElementById('copyBtn');
+            
+            if (bookId === '-') return;
+            
+            navigator.clipboard.writeText(bookId).then(() => {
+                copyBtn.innerHTML = '<span>✅</span> 已复制!';
+                copyBtn.classList.add('copied');
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = '<span>📋</span> 复制真实ID';
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            }).catch(() => {
+                // 降级方案
+                const textarea = document.createElement('textarea');
+                textarea.value = bookId;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                
+                copyBtn.innerHTML = '<span>✅</span> 已复制!';
+                copyBtn.classList.add('copied');
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = '<span>📋</span> 复制真实ID';
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+        
+        // 支持回车键提取
+        document.getElementById('linkInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                extractId();
+            }
+        });
+    <\/script>
+</body>
+</html>

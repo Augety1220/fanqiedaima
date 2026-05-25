@@ -101,5 +101,3 @@ https://changdunovel.com/t/NL1SzCKYnH0/
 -后端：you you（Node.js）
 
 ##部署：Vercel
-
-许可
